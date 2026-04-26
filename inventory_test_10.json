@@ -1,0 +1,64 @@
+{
+    "items": [
+        {
+            "id": "p1",
+            "name": "Parafuso Sextavado",
+            "quantity": 150,
+            "min_threshold": 50
+        },
+        {
+            "id": "p2",
+            "name": "Porca Autotravante",
+            "quantity": 80,
+            "min_threshold": 40
+        },
+        {
+            "id": "p3",
+            "name": "Arruela de Pressão",
+            "quantity": 15,
+            "min_threshold": 30
+        },
+        {
+            "id": "p4",
+            "name": "Martelo de Unha 25mm",
+            "quantity": 3,
+            "min_threshold": 10
+        },
+        {
+            "id": "p5",
+            "name": "Chave Inglesa 10\"",
+            "quantity": 0,
+            "min_threshold": 5
+        },
+        {
+            "id": "p6",
+            "name": "Serrote Profissional",
+            "quantity": 12,
+            "min_threshold": 8
+        },
+        {
+            "id": "p7",
+            "name": "Alicate Universal",
+            "quantity": 4,
+            "min_threshold": 12
+        },
+        {
+            "id": "p8",
+            "name": "Trena em Aço 5m",
+            "quantity": 25,
+            "min_threshold": 10
+        },
+        {
+            "id": "p9",
+            "name": "Nível de Bolha",
+            "quantity": 0,
+            "min_threshold": 4
+        },
+        {
+            "id": "p10",
+            "name": "Luvas de Proteção (Par)",
+            "quantity": 7,
+            "min_threshold": 20
+        }
+    ]
+}
