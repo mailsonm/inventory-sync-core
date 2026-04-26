@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>inventory-sync-core | Dashboard</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="glass-container">
+        <header>
+            <div class="logo">
+                <span class="pulse"></span>
+                <h1>inventory-sync-core</h1>
+            </div>
+            <div class="header-actions">
+                <input type="file" id="jsonInput" style="display: none;" accept=".json">
+                <button class="btn btn-primary" onclick="document.getElementById('jsonInput').click()">
+                    Sincronizar JSON
+                </button>
+                <div class="status-badge">Sistema Online</div>
+            </div>
+        </header>
+
+        <main>
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total de Itens</h3>
+                    <p class="value">{{ stats.total }}</p>
+                    <span class="label">Cadastrados</span>
+                </div>
+                <div class="stat-card warning">
+                    <h3>Alertas de Estoque</h3>
+                    <p class="value">{{ stats.alerts }}</p>
+                    <span class="label">Abaixo do Mínimo</span>
+                </div>
+                <div class="stat-card danger">
+                    <h3>Zerados</h3>
+                    <p class="value">{{ stats.out_of_stock }}</p>
+                    <span class="label">Reposição Imediata</span>
+                </div>
+            </section>
+
+            <section class="inventory-section">
+                <div class="section-header">
+                    <h2>Inventário em Tempo Real</h2>
+                    <div class="search-box">
+                        <input type="text" placeholder="Buscar produto..." id="searchInput">
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Produto</th>
+                                <th>Quantidade</th>
+                                <th>Mínimo (Threshold)</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTable">
+                            {% for item in items %}
+                            <tr class="item-row {% if item.is_low %}low-stock{% endif %}" id="row-{{ item.obj.id }}">
+                                <td><code>{{ item.obj.id }}</code></td>
+                                <td class="item-name">{{ item.obj.name }}</td>
+                                <td class="item-qty">
+                                    <div class="qty-bar-container">
+                                        <div class="qty-bar" data-width="{{ item.width }}"
+                                            data-color="{{ item.color }}"></div>
+                                        <span>{{ item.obj.quantity }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ item.obj.min_threshold }}</td>
+                                <td>
+                                    {% if item.is_low %}
+                                    <span class="badge badge-error">ALERTA</span>
+                                    {% else %}
+                                    <span class="badge badge-success">ESTÁVEL</span>
+                                    {% endif %}
+                                </td>
+                                <td class="actions">
+                                    <button class="btn-icon danger" onclick="deleteItem('{{ item.obj.id }}')"
+                                        title="Excluir">
+                                        &times;
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 inventory-sync-core | ERP Integration System</p>
+        </footer>
+    </div>
+
+    <script>
+        // Aplica os estilos dinâmicos para satisfazer linters
+        function applyStyles() {
+            document.querySelectorAll('.qty-bar').forEach(bar => {
+                bar.style.width = bar.dataset.width + '%';
+                bar.style.backgroundColor = bar.dataset.color;
+            });
+        }
+        applyStyles();
+
+        // Filtro de busca simples
+        document.getElementById('searchInput').addEventListener('input', function (e) {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.item-row');
+
+            rows.forEach(row => {
+                const name = row.querySelector('.item-name').textContent.toLowerCase();
+                if (name.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Função de Exclusão
+        async function deleteItem(id) {
+            if (!confirm(`Tem certeza que deseja excluir o item ${id}?`)) return;
+
+            try {
+                const response = await fetch(`/items/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    document.getElementById(`row-${id}`).remove();
+                    // Recarrega para atualizar estatísticas
+                    location.reload();
+                } else {
+                    alert('Erro ao excluir item.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro de conexão.');
+            }
+        }
+
+        // Função de Sincronização (Upload)
+        document.getElementById('jsonInput').addEventListener('change', async function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/sync', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Erro na sincronização: ' + result.detail);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro de conexão ao enviar arquivo.');
+            }
+        });
+    </script>
+</body>
+
+</html>

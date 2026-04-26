@@ -33,6 +33,12 @@
     pytest
     ```
 
+4.  **Rodar o Dashboard / Run Dashboard:**
+    ```bash
+    uvicorn src.app.web:app --reload
+    ```
+    Acesse em / Access at: `http://localhost:8000`
+
 ## Estrutura / Estructura / Structure
 
 - `src/app/models/`: Database models (SQLAlchemy).

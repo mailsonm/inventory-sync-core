@@ -52,3 +52,42 @@ class InventoryService:
                 db.add(db_item)
         
         db.commit()
+
+    def list_items(self, db: Session) -> List[DBInventoryItem]:
+        """
+        Retorna a lista completa de itens do banco de dados.
+        """
+        return db.query(DBInventoryItem).all()
+
+    def get_item(self, db: Session, item_id: str) -> DBInventoryItem:
+        """
+        Busca um item específico pelo ID.
+        """
+        return db.query(DBInventoryItem).filter(DBInventoryItem.id == item_id).first()
+
+    def delete_item(self, db: Session, item_id: str) -> bool:
+        """
+        Remove um item do banco de dados. Retorna True se removido, False caso contrário.
+        """
+        item = self.get_item(db, item_id)
+        if item:
+            db.delete(item)
+            db.commit()
+            return True
+        return False
+
+    def get_inventory_stats(self, db: Session) -> dict:
+        """
+        Calcula e retorna estatísticas consolidadas do inventário.
+        """
+        items = self.list_items(db)
+        total = len(items)
+        alerts = len(self.get_low_stock_items(items))
+        out_of_stock = len([i for i in items if i.quantity == 0])
+        
+        return {
+            "total": total,
+            "alerts": alerts,
+            "out_of_stock": out_of_stock,
+            "items_raw": items # Útil para o dashboard
+        }
