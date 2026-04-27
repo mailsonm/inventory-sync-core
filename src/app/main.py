@@ -31,13 +31,22 @@ def main():
         db = SessionLocal()
         try:
             service.upsert_inventory(db, inventory.items)
-            print("Sucesso: Dados persistidos no banco de dados.")
+            
+            # Relatório de Estoque Baixo
+            low_stock_items = service.get_low_stock_items(inventory.items)
+            
+            # Registra no Histórico
+            service.log_sync_event(
+                db, 
+                filename=os.path.basename(args.file),
+                processed_count=len(inventory.items),
+                alerts_count=len(low_stock_items)
+            )
+            
+            print("Sucesso: Dados persistidos e histórico registrado.")
         finally:
             db.close()
             
-        # Relatório de Estoque Baixo
-        low_stock_items = service.get_low_stock_items(inventory.items)
-        
         print("\n" + "="*40)
         print("   RELATÓRIO DE INTEGRAÇÃO DE ESTOQUE")
         print("="*40)

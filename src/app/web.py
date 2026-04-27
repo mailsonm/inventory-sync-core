@@ -30,11 +30,12 @@ def on_startup():
 @app.get("/")
 def read_inventory(request: Request, db: Session = Depends(get_db)):
     """
-    Lista todos os itens de inventário e renderiza o dashboard usando o serviço.
+    Lista todos os itens de inventário e mostra o dashboard com histórico.
     """
     service = InventoryService()
     stats = service.get_inventory_stats(db)
     items = stats.pop("items_raw")
+    history = service.get_sync_history(db)
     
     # Processar itens para o dashboard (adicionar metadados de estilo)
     display_items = []
@@ -56,7 +57,8 @@ def read_inventory(request: Request, db: Session = Depends(get_db)):
         name="index.html",
         context={
             "items": display_items,
-            "stats": stats
+            "stats": stats,
+            "history": history
         }
     )
 
@@ -74,7 +76,7 @@ def delete_item(item_id: str, db: Session = Depends(get_db)):
 @app.post("/sync")
 async def sync_inventory(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
-    Recebe um arquivo JSON e atualiza o inventário no banco de dados.
+    Recebe um arquivo JSON e atualiza o inventário no banco de dados com log.
     """
     try:
         content = await file.read()
@@ -84,7 +86,16 @@ async def sync_inventory(file: UploadFile = File(...), db: Session = Depends(get
         inventory = service.process_json(json_data)
         service.upsert_inventory(db, inventory.items)
         
-        return {"status": "success", "message": f"{len(inventory.items)} itens sincronizados com sucesso."}
+        # Log do evento de sincronização
+        low_stock_count = len(service.get_low_stock_items(inventory.items))
+        service.log_sync_event(
+            db, 
+            filename=file.filename,
+            processed_count=len(inventory.items),
+            alerts_count=low_stock_count
+        )
+        
+        return {"status": "success", "message": f"{len(inventory.items)} itens sincronizados e registrados."}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

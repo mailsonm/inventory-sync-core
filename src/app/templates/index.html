@@ -95,7 +95,39 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+                <section class="history-section">
+                    <div class="section-header">
+                        <h2>Histórico de Sincronização</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Arquivo</th>
+                                    <th>Itens</th>
+                                    <th>Alertas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in history %}
+                                <tr>
+                                    <td>{{ log.timestamp.strftime('%d/%m %H:%M') }}</td>
+                                    <td><code>{{ log.filename }}</code></td>
+                                    <td>{{ log.processed_count }}</td>
+                                    <td><span class="text-warning">{{ log.alerts_count }}</span></td>
+                                </tr>
+                                {% endfor %}
+                                {% if not history %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-dim);">Nenhum histórico
+                                        registrado.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
         </main>
 
         <footer>

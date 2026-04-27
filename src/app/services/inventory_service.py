@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from pydantic import ValidationError
 from ..schemas.inventory_schema import InventoryListSchema, InventoryItemSchema
-from ..models.inventory import InventoryItem as DBInventoryItem
+from ..models.inventory import InventoryItem as DBInventoryItem, SyncHistory as DBSyncHistory
 
 class InventoryService:
     """
@@ -91,3 +91,22 @@ class InventoryService:
             "out_of_stock": out_of_stock,
             "items_raw": items # Útil para o dashboard
         }
+
+    def log_sync_event(self, db: Session, filename: str, processed_count: int, alerts_count: int):
+        """
+        Registra um evento de sincronização no histórico.
+        """
+        log = DBSyncHistory(
+            filename=filename,
+            processed_count=processed_count,
+            alerts_count=alerts_count
+        )
+        db.add(log)
+        db.commit()
+
+    def get_sync_history(self, db: Session, limit: int = 5) -> List[DBSyncHistory]:
+        """
+        Retorna os últimos eventos de sincronização.
+        """
+        from sqlalchemy import desc
+        return db.query(DBSyncHistory).order_by(desc(DBSyncHistory.timestamp)).limit(limit).all()
