@@ -1,13 +1,13 @@
 import json
-from typing import List
+from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from pydantic import ValidationError
-from ..schemas.inventory_schema import InventoryListSchema, InventoryItemSchema
+from ..schemas.inventory_schema import InventoryListSchema, InventoryItemSchema, InventoryCategorySummarySchema
 from ..models.inventory import InventoryItem as DBInventoryItem, SyncHistory as DBSyncHistory
 
 class InventoryService:
     """
-    Serviço responsável por processar dados de estoque e aplicar regras de negócio.
+    Serviço responsável por processar dados de estoque, aplicar regras de negócio e comunicar com o ERP.
     """
     
     def process_json(self, json_data: str) -> InventoryListSchema:
@@ -20,16 +20,52 @@ class InventoryService:
         except json.JSONDecodeError as e:
             raise ValueError(f"JSON malformado: {str(e)}")
         except ValidationError as e:
-            # Repassa a ValidationError do Pydantic para que os testes/quem chama possa tratar
             raise e
         except Exception as e:
             raise ValueError(f"Erro inesperado ao processar JSON: {str(e)}")
 
-    def get_low_stock_items(self, items: List[InventoryItemSchema]) -> List[InventoryItemSchema]:
+    def get_low_stock_items(self, items: List[Any]) -> List[Any]:
         """
         Filtra itens onde a quantidade é estritamente menor que o threshold mínimo.
+        Funciona tanto com InventoryItemSchema quanto com DBInventoryItem.
         """
         return [item for item in items if item.quantity < item.min_threshold]
+
+    def calculate_total_inventory_value(self, items: List[Any]) -> float:
+        """
+        Calcula o valor financeiro acumulado total dos itens em estoque.
+        """
+        total = sum((getattr(item, 'quantity', 0) * getattr(item, 'unit_price', 0.0)) for item in items)
+        return round(total, 2)
+
+    def get_category_summaries(self, items: List[Any]) -> List[InventoryCategorySummarySchema]:
+        """
+        Agrupa e calcula métricas financeiras e físicas de estoque por categoria.
+        """
+        categories: Dict[str, Dict[str, Any]] = {}
+
+        for item in items:
+            cat = getattr(item, 'category', 'Geral') or 'Geral'
+            qty = getattr(item, 'quantity', 0)
+            price = getattr(item, 'unit_price', 0.0)
+            threshold = getattr(item, 'min_threshold', 0)
+
+            if cat not in categories:
+                categories[cat] = {
+                    "category": cat,
+                    "total_items": 0,
+                    "total_quantity": 0,
+                    "total_value": 0.0,
+                    "alert_count": 0
+                }
+
+            categories[cat]["total_items"] += 1
+            categories[cat]["total_quantity"] += qty
+            categories[cat]["total_value"] += round(qty * price, 2)
+            if qty < threshold:
+                categories[cat]["alert_count"] += 1
+
+        return [InventoryCategorySummarySchema(**data) for data in categories.values()]
 
     def upsert_inventory(self, db: Session, items: List[InventoryItemSchema]):
         """
@@ -40,14 +76,24 @@ class InventoryService:
             
             if db_item:
                 db_item.name = item_schema.name
+                db_item.sku = item_schema.sku
+                db_item.category = item_schema.category or "Geral"
                 db_item.quantity = item_schema.quantity
+                db_item.reserved_quantity = item_schema.reserved_quantity
                 db_item.min_threshold = item_schema.min_threshold
+                db_item.unit_price = item_schema.unit_price
+                db_item.location = item_schema.location or "Almoxarifado Principal"
             else:
                 db_item = DBInventoryItem(
                     id=item_schema.id,
+                    sku=item_schema.sku,
                     name=item_schema.name,
+                    category=item_schema.category or "Geral",
                     quantity=item_schema.quantity,
-                    min_threshold=item_schema.min_threshold
+                    reserved_quantity=item_schema.reserved_quantity,
+                    min_threshold=item_schema.min_threshold,
+                    unit_price=item_schema.unit_price,
+                    location=item_schema.location or "Almoxarifado Principal"
                 )
                 db.add(db_item)
         
@@ -84,12 +130,16 @@ class InventoryService:
         total = len(items)
         alerts = len(self.get_low_stock_items(items))
         out_of_stock = len([i for i in items if i.quantity == 0])
+        total_value = self.calculate_total_inventory_value(items)
+        categories = self.get_category_summaries(items)
         
         return {
             "total": total,
             "alerts": alerts,
             "out_of_stock": out_of_stock,
-            "items_raw": items # Útil para o dashboard
+            "total_value": total_value,
+            "categories": categories,
+            "items_raw": items
         }
 
     def log_sync_event(self, db: Session, filename: str, processed_count: int, alerts_count: int):

@@ -1,64 +1,59 @@
 {
-    "items": [
-        {
-            "id": "p1",
-            "name": "Parafuso Sextavado",
-            "quantity": 150,
-            "min_threshold": 50
-        },
-        {
-            "id": "p2",
-            "name": "Porca Autotravante",
-            "quantity": 80,
-            "min_threshold": 40
-        },
-        {
-            "id": "p3",
-            "name": "Arruela de Pressão",
-            "quantity": 15,
-            "min_threshold": 30
-        },
-        {
-            "id": "p4",
-            "name": "Martelo de Unha 25mm",
-            "quantity": 3,
-            "min_threshold": 10
-        },
-        {
-            "id": "p5",
-            "name": "Chave Inglesa 10\"",
-            "quantity": 0,
-            "min_threshold": 5
-        },
-        {
-            "id": "p6",
-            "name": "Serrote Profissional",
-            "quantity": 12,
-            "min_threshold": 8
-        },
-        {
-            "id": "p7",
-            "name": "Alicate Universal",
-            "quantity": 4,
-            "min_threshold": 12
-        },
-        {
-            "id": "p8",
-            "name": "Trena em Aço 5m",
-            "quantity": 25,
-            "min_threshold": 10
-        },
-        {
-            "id": "p9",
-            "name": "Nível de Bolha",
-            "quantity": 0,
-            "min_threshold": 4
-        },
-        {
-            "id": "p10",
-            "name": "Luvas de Proteção (Par)",
-            "quantity": 7,
-            "min_threshold": 20
-        }
-    ]
+  "items": [
+    {
+      "id": "p001",
+      "sku": "MED-PARAC-750",
+      "name": "Paracetamol 750mg Cx 20 Comprimidos",
+      "category": "Medicamentos",
+      "quantity": 150,
+      "reserved_quantity": 10,
+      "min_threshold": 30,
+      "unit_price": 14.50,
+      "location": "Farmácia Central - Prateleira A1"
+    },
+    {
+      "id": "p002",
+      "sku": "MED-AMOX-500",
+      "name": "Amoxicilina 500mg Cx 30 Cápsulas",
+      "category": "Antibióticos",
+      "quantity": 8,
+      "reserved_quantity": 2,
+      "min_threshold": 25,
+      "unit_price": 38.90,
+      "location": "Farmácia Central - Geladeira B2"
+    },
+    {
+      "id": "p003",
+      "sku": "MAT-SERING-10",
+      "name": "Seringa Descartável 10ml Cx 100un",
+      "category": "Materiais Médicos",
+      "quantity": 4,
+      "reserved_quantity": 0,
+      "min_threshold": 15,
+      "unit_price": 85.00,
+      "location": "Almoxarifado Geral - Setor C"
+    },
+    {
+      "id": "p004",
+      "sku": "MAT-LUVA-LATEX-M",
+      "name": "Luva de Procedimento Látex M Cx 100un",
+      "category": "Materiais Médicos",
+      "quantity": 80,
+      "reserved_quantity": 15,
+      "min_threshold": 20,
+      "unit_price": 42.00,
+      "location": "Almoxarifado Geral - Setor C"
+    },
+    {
+      "id": "p005",
+      "sku": "HIG-ALCOOL-70-1L",
+      "name": "Álcool 70% Hospitalar 1 Litro",
+      "category": "Higiene e Sanitização",
+      "quantity": 0,
+      "reserved_quantity": 0,
+      "min_threshold": 10,
+      "unit_price": 12.90,
+      "location": "Almoxarifado Geral - Prateleira D"
+    }
+  ]
 }
