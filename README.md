@@ -10,9 +10,6 @@
 
 O projeto adota princípios de **Clean Architecture** e **S.O.L.I.D.**, utilizando **Pydantic v2** para validação estrita de contratos de dados (DTOs), **SQLAlchemy 2.0** para abstração de banco de dados (SQLite/PostgreSQL) e **FastAPI** para endpoints de integração REST.
 
-> 💬 **Nota do Desenvolvedor:**  
-> *"Criado originalmente em Abril de 2026 para consolidar a integração entre conectores Odoo 19 ERP e APIs REST. Em Agosto de 2026, o projeto passou por uma revisão técnica completa de manutenção, adicionando cálculo de valor acumulado de estoque, sumarização por categoria, conector Odoo 19 nativo e suíte automatizada de testes com Pytest."*
-
 ### 🛠️ Recursos Principais
 - ⚡ **Validação Estrita com Pydantic v2:** Validação automática de SKUs, preços unitários, quantidades reservadas e limites mínimos de segurança.
 - 🏢 **Conector Nativo Odoo 19 (`OdooERPConnector`):** Mapeamento direto de dicionários e registros do Odoo (`stock.quant` e `product.product`).
