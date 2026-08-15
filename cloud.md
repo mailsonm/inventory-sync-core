@@ -1,47 +1,34 @@
-# Estrutura de Diretórios - ERP Integration
+# Arquitetura Técnica - Inventory Sync Core (FastAPI & Odoo 19)
 
-Esta estrutura foi desenhada para separar as preocupações de negócio das camadas de dados e infraestrutura, seguindo princípios de **Clean Architecture** e **S.O.L.I.D.**.
+O **`inventory-sync-core`** foi arquitetado seguindo os princípios de **Clean Architecture** e **S.O.L.I.D.** para garantir desacoplamento entre as regras de negócio de estoque e as camadas de persistência e apresentação.
 
 ```text
-erp_integration/
-├── src/
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py             # Entry point da aplicação
-│   │   ├── models/             # Modelos de Banco de Dados (ex: SQLAlchemy/Tortoise)
-│   │   │   ├── __init__.py
-│   │   │   ├── base.py
-│   │   │   └── inventory.py
-│   │   ├── services/           # Lógica de Negócio (Interacting with models)
-│   │   │   ├── __init__.py
-│   │   │   ├── inventory_service.py
-│   │   │   └── erp_connector.py
-│   │   ├── schemas/            # DTOs/Pydantic Models para validação de entrada/saída
-│   │   │   ├── __init__.py
-│   │   │   └── inventory_schema.py
-│   │   └── utils/              # Helpers e utilitários genéricos
-│   │       ├── __init__.py
-│   │       └── json_parser.py
-├── tests/                      # Suite de testes (Pytest)
-│   ├── __init__.py
-│   ├── conftest.py             # Fixtures globais
-│   ├── unit/
-│   │   ├── services/
-│   │   │   └── test_inventory_service.py
-│   │   └── schemas/
-│   │       └── test_inventory_schema.py
-│   ├── integration/
-├── data/                       # Arquivos de dados (JSONs de exemplo/seeds)
-│   └── inventory_sample.json
-├── docs/                       # Documentação Adicional
-├── cloud.md                    # Detalhamento da arquitetura (este arquivo)
-├── requirements.txt            # Dependências (Pydantic, Pytest, etc.)
-└── pyproject.toml              # Configurações de build e ferramentas
+src/
+└── app/
+    ├── main.py                 # CLI Entrypoint para lote de arquivos JSON
+    ├── web.py                  # API REST FastAPI & Web Dashboard (Jinja2)
+    ├── models/                 # Camada de Persistência (SQLAlchemy ORM 2.0)
+    │   ├── base.py             # Base Declarativa do ORM
+    │   ├── database.py         # Conexão e Gerenciador de Sessão SQLite/PostgreSQL
+    │   └── inventory.py        # Entidades DB (InventoryItem, SyncHistory)
+    ├── schemas/                # Camada de Validação & DTOs (Pydantic v2)
+    │   └── inventory_schema.py # Schemas rigorosos de entrada/saída
+    └── services/               # Camada de Negócio (Domain Logic & ERP Connectors)
+        ├── inventory_service.py # Lógica de conciliação, métricas e alertas
+        └── erp_connector.py    # Conector de mapeamento nativo Odoo 19
 ```
 
-## Separação de Camadas
+---
 
-1.  **Models (`src/app/models/`)**: Representam a estrutura de dados persistida. Devem ser anêmicos em relação a regras de negócio complexas.
-2.  **Services (`src/app/services/`)**: Contêm a "verdade" do negócio. É aqui que reside a lógica de integração, cálculos de estoque e alertas.
-3.  **Schemas (`src/app/schemas/`)**: Definem o contrato de dados. Usados para validar se o JSON recebido do ERP externo está correto antes de processá-lo.
-4.  **Utils (`src/app/utils/`)**: Funções puras que auxiliam no processamento técnico, sem conhecimento do domínio de negócio.
+## 🏛️ Princípios de Design Aplicados
+
+1. **Single Responsibility Principle (SRP):**
+   - `InventoryItemSchema` cuida exclusivamente da validação de tipos e garantias numéricas.
+   - `InventoryService` encapsula os cálculos financeiros e lógica de sincronização.
+   - `OdooERPConnector` abstrai a conversão dos dados específicos da estrutura de modelos do Odoo 19 (`stock.quant`, `product.product`).
+
+2. **Dependency Inversion Principle (DIP):**
+   - As rotas do FastAPI utilizam Injeção de Dependência (`Depends(get_db)`) para receber sessões do SQLAlchemy, facilitando o isolamento por mocks em testes unitários.
+
+3. **Data Transfer Objects (DTOs) com Pydantic v2:**
+   - Garantia de imutabilidade e conversão segura de tipos de entrada antes que qualquer dado atinja a camada de banco de dados.
